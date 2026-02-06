@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Kasatria 3D Data Tiles</title>
+<title>3D Data Visualization Assignment</title>
 
 <!-- Google Login -->
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 
-<!-- Three.js -->
+<!-- Three.js (same as demo) -->
 <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/examples/js/controls/TrackballControls.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/examples/js/renderers/CSS3DRenderer.js"></script>
@@ -31,20 +31,9 @@ body {
   box-shadow: 0 0 12px rgba(0,255,255,0.6);
 }
 
-.name {
-  font-size: 18px;
-  font-weight: bold;
-}
-
-.title {
-  margin-top: 6px;
-  font-size: 14px;
-}
-
-.worth {
-  margin-top: 10px;
-  font-size: 16px;
-}
+.name { font-size: 18px; font-weight: bold; }
+.title { font-size: 14px; margin-top: 6px; }
+.worth { font-size: 16px; margin-top: 10px; }
 
 #menu {
   position: fixed;
@@ -56,7 +45,6 @@ body {
 button {
   padding: 8px 12px;
   margin: 5px;
-  cursor: pointer;
 }
 
 #login {
@@ -80,10 +68,10 @@ button {
 </div>
 
 <script>
-/* ================= GOOGLE LOGIN ================= */
+/* ================= GOOGLE LOGIN (Image A) ================= */
 google.accounts.id.initialize({
   client_id: "495535270825-amr4or2tmcgkoqbkrpkk746n4slalevj.apps.googleusercontent.com",
-  callback: () => init()
+  callback: () => console.log("Signed in")
 });
 
 google.accounts.id.renderButton(
@@ -96,9 +84,11 @@ let camera, scene, renderer, controls;
 let objects = [];
 let targets = { table: [], sphere: [], helix: [], grid: [] };
 
+window.onload = init;
+
 async function init() {
 
-  camera = new THREE.PerspectiveCamera(40, window.innerWidth/window.innerHeight, 1, 10000);
+  camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 10000);
   camera.position.z = 3000;
 
   scene = new THREE.Scene();
@@ -117,16 +107,17 @@ async function init() {
   animate();
 }
 
-/* ================= LOAD GOOGLE SHEET CSV ================= */
-/* Uses export CSV (works ONLINE) */
+/* ================= LOAD GOOGLE SHEET CSV (CORRECT) ================= */
 async function loadCSV() {
-  const url = "https://docs.google.com/spreadsheets/d/1crSTk74mXX6i11vDQpUAqSJMEZITInkgYw2QK76Vaec/export?format=csv";
-  const res = await fetch(url);
-  const text = await res.text();
+  const response = await fetch(
+    "https://docs.google.com/spreadsheets/d/1crSTk74mXX6i11vDQpUAqSJMEZITInkgYw2QK76Vaec/export?format=csv"
+  );
+
+  const text = await response.text();
   const rows = text.trim().split("\n").slice(1);
 
-  return rows.map(r => {
-    const c = r.split(",");
+  return rows.map(row => {
+    const c = row.split(",");
     return {
       name: c[0],
       title: c[1],
@@ -135,7 +126,7 @@ async function loadCSV() {
   });
 }
 
-/* ================= CREATE DATA TILES ================= */
+/* ================= CREATE ELEMENTS (Image B) ================= */
 function createObjects(data) {
 
   data.forEach(d => {
@@ -154,9 +145,11 @@ function createObjects(data) {
     `;
 
     const obj = new THREE.CSS3DObject(div);
-    obj.position.x = Math.random() * 4000 - 2000;
-    obj.position.y = Math.random() * 4000 - 2000;
-    obj.position.z = Math.random() * 4000 - 2000;
+    obj.position.set(
+      Math.random() * 4000 - 2000,
+      Math.random() * 4000 - 2000,
+      Math.random() * 4000 - 2000
+    );
 
     scene.add(obj);
     objects.push(obj);
@@ -166,16 +159,18 @@ function createObjects(data) {
 /* ================= TARGET LAYOUTS ================= */
 function createTargets(count) {
 
-  /* TABLE 20 x 10 */
+  // TABLE 20 x 10
   for (let i = 0; i < count; i++) {
     const obj = new THREE.Object3D();
-    obj.position.x = (i % 20) * 140 - 1400;
-    obj.position.y = -(Math.floor(i / 20) % 10) * 180 + 900;
-    obj.position.z = 0;
+    obj.position.set(
+      (i % 20) * 140 - 1400,
+      -(Math.floor(i / 20) % 10) * 180 + 900,
+      0
+    );
     targets.table.push(obj);
   }
 
-  /* SPHERE */
+  // SPHERE
   for (let i = 0; i < count; i++) {
     const phi = Math.acos(-1 + (2 * i) / count);
     const theta = Math.sqrt(count * Math.PI) * phi;
@@ -184,47 +179,41 @@ function createTargets(count) {
     targets.sphere.push(obj);
   }
 
-  /* DOUBLE HELIX */
+  // DOUBLE HELIX
   for (let i = 0; i < count; i++) {
-    const obj = new THREE.Object3D();
     const angle = i * 0.5;
-    const y = -(i * 10) + 500;
+    const obj = new THREE.Object3D();
 
-    if (i % 2 === 0) {
-      obj.position.x = 800 * Math.cos(angle);
-      obj.position.z = 800 * Math.sin(angle);
-    } else {
-      obj.position.x = 800 * Math.cos(angle + Math.PI);
-      obj.position.z = 800 * Math.sin(angle + Math.PI);
-    }
-    obj.position.y = y;
+    obj.position.set(
+      800 * Math.cos(angle + (i % 2 ? Math.PI : 0)),
+      -(i * 10) + 500,
+      800 * Math.sin(angle + (i % 2 ? Math.PI : 0))
+    );
+
     targets.helix.push(obj);
   }
 
-  /* GRID 5 x 4 x 10 */
+  // GRID 5 x 4 x 10
   for (let i = 0; i < count; i++) {
     const obj = new THREE.Object3D();
-    obj.position.x = (i % 5) * 400 - 800;
-    obj.position.y = (Math.floor(i / 5) % 4) * 400 - 800;
-    obj.position.z = Math.floor(i / 20) * 400 - 800;
+    obj.position.set(
+      (i % 5) * 400 - 800,
+      (Math.floor(i / 5) % 4) * 400 - 800,
+      Math.floor(i / 20) * 400 - 800
+    );
     targets.grid.push(obj);
   }
 }
 
-/* ================= TRANSFORM (LIKE DEMO) ================= */
+/* ================= TRANSFORM (DEMO STYLE) ================= */
 function transform(targetsArr, duration) {
-
   TWEEN.removeAll();
 
   objects.forEach((obj, i) => {
     const target = targetsArr[i];
 
     new TWEEN.Tween(obj.position)
-      .to({
-        x: target.position.x,
-        y: target.position.y,
-        z: target.position.z
-      }, duration)
+      .to(target.position, duration)
       .easing(TWEEN.Easing.Exponential.InOut)
       .start();
   });
