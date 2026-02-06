@@ -1,309 +1,375 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>3D Data Visualization Assignment</title>
 
+<!-- Google Login -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<!-- Three.js -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.150.1/examples/js/controls/TrackballControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.150.1/examples/js/renderers/CSS3DRenderer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tweenjs/tween.js@18.6.4/dist/tween.umd.js"></script>
+
+<style>
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: #333;
-    min-height: 100vh;
-    padding: 20px;
+  margin: 0;
+  overflow: hidden;
+  background: #000;
+  font-family: Arial;
 }
 
-.container {
-    max-width: 1400px;
-    margin: 0 auto;
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    padding: 30px;
-    position: relative;
-    overflow: hidden;
-}
-
-.container::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 5px;
-    background: linear-gradient(90deg, #ff6b6b, #ffa726, #4caf50);
-}
-
-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-    padding-bottom: 20px;
-    border-bottom: 2px solid #e0e0e0;
-}
-
-h1 {
-    color: #2d3436;
-    font-size: 2.5rem;
-    background: linear-gradient(90deg, #667eea, #764ba2);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-#user-info {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-#user-pic {
-    border-radius: 50%;
-    border: 3px solid #667eea;
-}
-
-#user-name {
-    font-weight: bold;
-    color: #2d3436;
-}
-
-button {
-    padding: 12px 24px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    border-radius: 25px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-}
-
-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-}
-
-button:active {
-    transform: translateY(0);
-}
-
-.controls {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 30px;
-    margin-bottom: 30px;
-    background: #f8f9fa;
-    padding: 25px;
-    border-radius: 15px;
-}
-
-.mode-selector, .data-info {
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-}
-
-.mode-selector button {
-    display: block;
-    width: 100%;
-    margin: 10px 0;
-    text-align: left;
-    position: relative;
-    padding-left: 50px;
-}
-
-.mode-selector button::before {
-    content: '▶';
-    position: absolute;
-    left: 20px;
-    transition: transform 0.3s ease;
-}
-
-.mode-selector button:hover::before {
-    transform: translateX(5px);
-}
-
-h3 {
-    color: #2d3436;
-    margin-bottom: 15px;
-    font-size: 1.3rem;
-}
-
-.legend {
-    margin-top: 15px;
-}
-
-.color-box {
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    border-radius: 4px;
-    margin-right: 10px;
-    vertical-align: middle;
-}
-
-.red { background: #ff6b6b; }
-.orange { background: #ffa726; }
-.green { background: #4caf50; }
-
-#container {
-    width: 100%;
-    height: 600px;
-    background: #000;
-    border-radius: 10px;
-    margin: 30px 0;
-    overflow: hidden;
-    position: relative;
-}
-
-#loading {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    color: white;
-}
-
-.spinner {
-    width: 50px;
-    height: 50px;
-    border: 5px solid #f3f3f3;
-    border-top: 5px solid #667eea;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-bottom: 20px;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.data-table-container {
-    background: white;
-    padding: 25px;
-    border-radius: 15px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-    margin-top: 30px;
-}
-
-.table-scroll {
-    max-height: 400px;
-    overflow-y: auto;
-    border: 1px solid #e0e0e0;
-    border-radius: 10px;
-}
-
-#data-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-#data-table th {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 15px;
-    text-align: left;
-    position: sticky;
-    top: 0;
-}
-
-#data-table td {
-    padding: 12px 15px;
-    border-bottom: 1px solid #e0e0e0;
-}
-
-#data-table tr:hover {
-    background-color: #f5f5f5;
-}
-
-/* CSS3D Element Styles */
 .element {
-    width: 180px;
-    height: 220px;
-    background: white;
-    border-radius: 10px;
-    padding: 15px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    transition: all 0.3s ease;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+  width: 140px;
+  height: 180px;
+  border-radius: 10px;
+  text-align: center;
+  padding: 15px;
+  color: white;
+  box-shadow: 0 0 12px rgba(0,255,255,0.6);
+  cursor: pointer;
+  transition: transform 0.3s;
 }
 
 .element:hover {
-    transform: scale(1.05);
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+  transform: scale(1.05);
 }
 
-.element-header {
-    text-align: center;
-    border-bottom: 2px solid #e0e0e0;
-    padding-bottom: 10px;
-    margin-bottom: 10px;
+.name { font-size: 18px; font-weight: bold; }
+.title { font-size: 14px; margin-top: 6px; }
+.worth { font-size: 16px; margin-top: 10px; font-weight: bold; }
+
+#menu {
+  position: fixed;
+  bottom: 20px;
+  width: 100%;
+  text-align: center;
+  z-index: 100;
 }
 
-.element-name {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #2d3436;
+#menu button {
+  padding: 12px 20px;
+  margin: 5px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  border-radius: 25px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
 }
 
-.element-category {
-    font-size: 0.9rem;
-    color: #666;
-    margin-top: 5px;
+#menu button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
 }
 
-.element-details {
-    flex-grow: 1;
+#login {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 100;
 }
 
-.detail-row {
-    display: flex;
-    justify-content: space-between;
-    margin: 8px 0;
-    padding: 5px 0;
-    border-bottom: 1px solid #f0f0f0;
+#user-info {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 100;
+  color: white;
+  display: none;
 }
 
-.detail-label {
-    font-weight: 600;
-    color: #666;
+#user-info button {
+  margin-left: 10px;
+  padding: 8px 15px;
+  background: #ff4444;
+  color: white;
+  border: none;
+  border-radius: 15px;
+  cursor: pointer;
 }
 
-.detail-value {
-    font-weight: bold;
-    color: #2d3436;
+#data-summary {
+  position: fixed;
+  top: 70px;
+  left: 20px;
+  color: white;
+  background: rgba(0,0,0,0.5);
+  padding: 10px;
+  border-radius: 10px;
+  display: none;
 }
 
-.worth-value {
-    font-size: 1.2rem;
-    font-weight: 900;
+#legend {
+  display: flex;
+  gap: 10px;
+  margin-top: 5px;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-    .controls {
-        grid-template-columns: 1fr;
+.color-box {
+  width: 15px;
+  height: 15px;
+  border-radius: 3px;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.red { background: #ff4444; }
+.orange { background: #ffaa44; }
+.green { background: #44ff44; }
+</style>
+</head>
+
+<body>
+
+<div id="login"></div>
+
+<div id="user-info">
+  <span id="user-name"></span>
+  <button onclick="handleSignOut()">Sign Out</button>
+</div>
+
+<div id="data-summary">
+  Total Records: <span id="total-count">0</span><br>
+  <div id="legend">
+    <span class="color-box red"></span> < $100K
+    <span class="color-box orange"></span> $100K-$200K
+    <span class="color-box green"></span> > $200K
+  </div>
+</div>
+
+<div id="menu">
+  <button onclick="transform(targets.table,2000)">Table (20×10)</button>
+  <button onclick="transform(targets.sphere,2000)">Sphere</button>
+  <button onclick="transform(targets.helix,2000)">Double Helix</button>
+  <button onclick="transform(targets.grid,2000)">Grid (5×4×10)</button>
+</div>
+
+<script>
+/* ================= GOOGLE LOGIN ================= */
+google.accounts.id.initialize({
+  client_id: "495535270825-amr4or2tmcgkoqbkrpkk746n4slalevj.apps.googleusercontent.com",
+  callback: handleGoogleSignIn
+});
+
+google.accounts.id.renderButton(
+  document.getElementById("login"),
+  { theme: "outline", size: "large", width: "200" }
+);
+
+function handleGoogleSignIn(response) {
+  console.log("Google Sign-In successful");
+  
+  const userData = JSON.parse(atob(response.credential.split('.')[1]));
+  
+  document.getElementById('login').style.display = 'none';
+  document.getElementById('user-info').style.display = 'block';
+  document.getElementById('data-summary').style.display = 'block';
+  document.getElementById('user-name').textContent = userData.name || userData.email;
+  
+  init();
+}
+
+function handleSignOut() {
+  google.accounts.id.disableAutoSelect();
+  document.getElementById('login').style.display = 'block';
+  document.getElementById('user-info').style.display = 'none';
+  document.getElementById('data-summary').style.display = 'none';
+  
+  // Clear scene
+  if (scene) {
+    objects.forEach(obj => scene.remove(obj));
+    objects = [];
+  }
+}
+
+/* ================= THREE.JS CORE ================= */
+let camera, scene, renderer, controls;
+let objects = [];
+let targets = { table: [], sphere: [], helix: [], grid: [] };
+
+async function init() {
+  camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 10000);
+  camera.position.z = 3000;
+
+  scene = new THREE.Scene();
+
+  renderer = new THREE.CSS3DRenderer();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
+
+  controls = new THREE.TrackballControls(camera, renderer.domElement);
+
+  const data = await loadCSV();
+  createObjects(data);
+  createTargets(data.length);
+  updateSummary(data.length);
+
+  transform(targets.table, 2000);
+  animate();
+}
+
+/* ================= LOAD GOOGLE SHEET ================= */
+async function loadCSV() {
+  const response = await fetch(
+    "https://docs.google.com/spreadsheets/d/1crSTk74mXX6i11vDQpUAqSJMEZITInkgYw2QK76Vaec/export?format=csv"
+  );
+
+  const text = await response.text();
+  const rows = text.trim().split("\n").slice(1); // Skip header
+
+  return rows.map(row => {
+    const columns = row.split(",");
+    let netWorth = 0;
+    
+    // Parse net worth (handle $ and commas)
+    if (columns[2]) {
+      netWorth = parseFloat(columns[2].replace(/[$,]/g, '')) || 0;
     }
     
-    header {
-        flex-direction: column;
-        gap: 20px;
-        text-align: center;
-    }
-    
-    #container {
-        height: 400px;
-    }
+    return {
+      name: columns[0] || "Unknown",
+      title: columns[1] || "N/A",
+      netWorth: netWorth
+    };
+  });
 }
+
+/* ================= CREATE ELEMENTS ================= */
+function createObjects(data) {
+  // Clear existing
+  objects.forEach(o => scene.remove(o));
+  objects = [];
+
+  data.forEach((d, i) => {
+    const div = document.createElement("div");
+    div.className = "element";
+
+    // Color based on net worth
+    if (d.netWorth < 100000) {
+      div.style.background = "#ff4444";
+    } else if (d.netWorth < 200000) {
+      div.style.background = "#ffaa44";
+    } else {
+      div.style.background = "#44ff44";
+    }
+
+    div.innerHTML = `
+      <div class="name">${d.name}</div>
+      <div class="title">${d.title}</div>
+      <div class="worth">$${d.netWorth.toLocaleString()}</div>
+    `;
+
+    // Add click handler
+    div.onclick = () => {
+      alert(`${d.name}\n${d.title}\nNet Worth: $${d.netWorth.toLocaleString()}`);
+    };
+
+    const obj = new THREE.CSS3DObject(div);
+    obj.position.set(
+      Math.random() * 4000 - 2000,
+      Math.random() * 4000 - 2000,
+      Math.random() * 4000 - 2000
+    );
+
+    scene.add(obj);
+    objects.push(obj);
+  });
+}
+
+/* ================= CREATE TARGET LAYOUTS ================= */
+function createTargets(count) {
+  targets = { table: [], sphere: [], helix: [], grid: [] };
+
+  // TABLE 20 x 10
+  for (let i = 0; i < count; i++) {
+    const obj = new THREE.Object3D();
+    obj.position.set(
+      (i % 20) * 150 - 1400,  // 20 columns
+      -(Math.floor(i / 20) % 10) * 200 + 900,  // 10 rows
+      0
+    );
+    targets.table.push(obj);
+  }
+
+  // SPHERE
+  for (let i = 0; i < count; i++) {
+    const phi = Math.acos(-1 + (2 * i) / count);
+    const theta = Math.sqrt(count * Math.PI) * phi;
+    const obj = new THREE.Object3D();
+    obj.position.setFromSphericalCoords(800, phi, theta);
+    targets.sphere.push(obj);
+  }
+
+  // DOUBLE HELIX
+  for (let i = 0; i < count; i++) {
+    const angle = i * 0.175;
+    const obj = new THREE.Object3D();
+    
+    // Double helix: alternate between two spirals
+    const helixOffset = (i % 2) * Math.PI; // 0 or π
+    
+    obj.position.set(
+      600 * Math.cos(angle + helixOffset),
+      -(i * 8) + 400,
+      600 * Math.sin(angle + helixOffset)
+    );
+
+    targets.helix.push(obj);
+  }
+
+  // GRID 5 x 4 x 10
+  for (let i = 0; i < count; i++) {
+    const obj = new THREE.Object3D();
+    
+    // 5 columns (x), 4 rows (y), 10 layers (z)
+    const x = (i % 5) * 300 - 600;
+    const y = (Math.floor(i / 5) % 4) * 300 - 450;
+    const z = Math.floor(i / 20) * 300 - 1350;
+    
+    obj.position.set(x, y, z);
+    targets.grid.push(obj);
+  }
+}
+
+/* ================= TRANSFORM ANIMATION ================= */
+function transform(targetsArr, duration) {
+  TWEEN.removeAll();
+
+  objects.forEach((obj, i) => {
+    const target = targetsArr[i];
+    if (!target) return;
+
+    new TWEEN.Tween(obj.position)
+      .to(target.position, duration)
+      .easing(TWEEN.Easing.Exponential.InOut)
+      .start();
+  });
+}
+
+/* ================= UPDATE SUMMARY ================= */
+function updateSummary(count) {
+  document.getElementById('total-count').textContent = count;
+}
+
+/* ================= ANIMATION LOOP ================= */
+function animate(time) {
+  requestAnimationFrame(animate);
+  TWEEN.update(time);
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+/* ================= WINDOW RESIZE ================= */
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+
+</body>
+</html>
