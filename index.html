@@ -1,232 +1,309 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<title>3D Data Visualization Assignment</title>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-<!-- Google Login -->
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-
-<!-- Three.js (same as demo) -->
-<script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.150.1/examples/js/controls/TrackballControls.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.150.1/examples/js/renderers/CSS3DRenderer.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tweenjs/tween.js@18.6.4/dist/tween.umd.js"></script>
-
-<style>
 body {
-  margin: 0;
-  overflow: hidden;
-  background: #000;
-  font-family: Arial;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #333;
+    min-height: 100vh;
+    padding: 20px;
 }
 
-.element {
-  width: 120px;
-  height: 160px;
-  border-radius: 10px;
-  text-align: center;
-  padding-top: 10px;
-  color: white;
-  box-shadow: 0 0 12px rgba(0,255,255,0.6);
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    padding: 30px;
+    position: relative;
+    overflow: hidden;
 }
 
-.name { font-size: 18px; font-weight: bold; }
-.title { font-size: 14px; margin-top: 6px; }
-.worth { font-size: 16px; margin-top: 10px; }
+.container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, #ff6b6b, #ffa726, #4caf50);
+}
 
-#menu {
-  position: fixed;
-  bottom: 20px;
-  width: 100%;
-  text-align: center;
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+h1 {
+    color: #2d3436;
+    font-size: 2.5rem;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+#user-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+#user-pic {
+    border-radius: 50%;
+    border: 3px solid #667eea;
+}
+
+#user-name {
+    font-weight: bold;
+    color: #2d3436;
 }
 
 button {
-  padding: 8px 12px;
-  margin: 5px;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 }
 
-#login {
-  position: fixed;
-  top: 20px;
-  left: 20px;
-  z-index: 10;
-}
-</style>
-</head>
-
-<body>
-
-<div id="login"></div>
-
-<div id="menu">
-  <button onclick="transform(targets.table,2000)">Table</button>
-  <button onclick="transform(targets.sphere,2000)">Sphere</button>
-  <button onclick="transform(targets.helix,2000)">Helix</button>
-  <button onclick="transform(targets.grid,2000)">Grid</button>
-</div>
-
-<script>
-/* ================= GOOGLE LOGIN (Image A) ================= */
-google.accounts.id.initialize({
-  client_id: "495535270825-amr4or2tmcgkoqbkrpkk746n4slalevj.apps.googleusercontent.com",
-  callback: () => console.log("Signed in")
-});
-
-google.accounts.id.renderButton(
-  document.getElementById("login"),
-  { theme: "outline", size: "large" }
-);
-
-/* ================= THREE.JS CORE ================= */
-let camera, scene, renderer, controls;
-let objects = [];
-let targets = { table: [], sphere: [], helix: [], grid: [] };
-
-window.onload = init;
-
-async function init() {
-
-  camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 10000);
-  camera.position.z = 3000;
-
-  scene = new THREE.Scene();
-
-  renderer = new THREE.CSS3DRenderer();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  document.body.appendChild(renderer.domElement);
-
-  controls = new THREE.TrackballControls(camera, renderer.domElement);
-
-  const data = await loadCSV();
-  createObjects(data);
-  createTargets(data.length);
-
-  transform(targets.table, 2000);
-  animate();
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
 }
 
-/* ================= LOAD GOOGLE SHEET CSV (CORRECT) ================= */
-async function loadCSV() {
-  const response = await fetch(
-    "https://docs.google.com/spreadsheets/d/1crSTk74mXX6i11vDQpUAqSJMEZITInkgYw2QK76Vaec/export?format=csv"
-  );
-
-  const text = await response.text();
-  const rows = text.trim().split("\n").slice(1);
-
-  return rows.map(row => {
-    const c = row.split(",");
-    return {
-      name: c[0],
-      title: c[1],
-      netWorth: parseInt(c[2])
-    };
-  });
+button:active {
+    transform: translateY(0);
 }
 
-/* ================= CREATE ELEMENTS (Image B) ================= */
-function createObjects(data) {
-
-  data.forEach(d => {
-
-    const div = document.createElement("div");
-    div.className = "element";
-
-    if (d.netWorth < 100000) div.style.background = "red";
-    else if (d.netWorth < 200000) div.style.background = "orange";
-    else div.style.background = "green";
-
-    div.innerHTML = `
-      <div class="name">${d.name}</div>
-      <div class="title">${d.title}</div>
-      <div class="worth">$${d.netWorth}</div>
-    `;
-
-    const obj = new THREE.CSS3DObject(div);
-    obj.position.set(
-      Math.random() * 4000 - 2000,
-      Math.random() * 4000 - 2000,
-      Math.random() * 4000 - 2000
-    );
-
-    scene.add(obj);
-    objects.push(obj);
-  });
+.controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-bottom: 30px;
+    background: #f8f9fa;
+    padding: 25px;
+    border-radius: 15px;
 }
 
-/* ================= TARGET LAYOUTS ================= */
-function createTargets(count) {
-
-  // TABLE 20 x 10
-  for (let i = 0; i < count; i++) {
-    const obj = new THREE.Object3D();
-    obj.position.set(
-      (i % 20) * 140 - 1400,
-      -(Math.floor(i / 20) % 10) * 180 + 900,
-      0
-    );
-    targets.table.push(obj);
-  }
-
-  // SPHERE
-  for (let i = 0; i < count; i++) {
-    const phi = Math.acos(-1 + (2 * i) / count);
-    const theta = Math.sqrt(count * Math.PI) * phi;
-    const obj = new THREE.Object3D();
-    obj.position.setFromSphericalCoords(800, phi, theta);
-    targets.sphere.push(obj);
-  }
-
-  // DOUBLE HELIX
-  for (let i = 0; i < count; i++) {
-    const angle = i * 0.5;
-    const obj = new THREE.Object3D();
-
-    obj.position.set(
-      800 * Math.cos(angle + (i % 2 ? Math.PI : 0)),
-      -(i * 10) + 500,
-      800 * Math.sin(angle + (i % 2 ? Math.PI : 0))
-    );
-
-    targets.helix.push(obj);
-  }
-
-  // GRID 5 x 4 x 10
-  for (let i = 0; i < count; i++) {
-    const obj = new THREE.Object3D();
-    obj.position.set(
-      (i % 5) * 400 - 800,
-      (Math.floor(i / 5) % 4) * 400 - 800,
-      Math.floor(i / 20) * 400 - 800
-    );
-    targets.grid.push(obj);
-  }
+.mode-selector, .data-info {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
 }
 
-/* ================= TRANSFORM (DEMO STYLE) ================= */
-function transform(targetsArr, duration) {
-  TWEEN.removeAll();
-
-  objects.forEach((obj, i) => {
-    const target = targetsArr[i];
-
-    new TWEEN.Tween(obj.position)
-      .to(target.position, duration)
-      .easing(TWEEN.Easing.Exponential.InOut)
-      .start();
-  });
+.mode-selector button {
+    display: block;
+    width: 100%;
+    margin: 10px 0;
+    text-align: left;
+    position: relative;
+    padding-left: 50px;
 }
 
-/* ================= ANIMATE ================= */
-function animate(time) {
-  requestAnimationFrame(animate);
-  TWEEN.update(time);
-  controls.update();
-  renderer.render(scene, camera);
+.mode-selector button::before {
+    content: '▶';
+    position: absolute;
+    left: 20px;
+    transition: transform 0.3s ease;
 }
-</script>
 
-</body>
-</html>
+.mode-selector button:hover::before {
+    transform: translateX(5px);
+}
+
+h3 {
+    color: #2d3436;
+    margin-bottom: 15px;
+    font-size: 1.3rem;
+}
+
+.legend {
+    margin-top: 15px;
+}
+
+.color-box {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    margin-right: 10px;
+    vertical-align: middle;
+}
+
+.red { background: #ff6b6b; }
+.orange { background: #ffa726; }
+.green { background: #4caf50; }
+
+#container {
+    width: 100%;
+    height: 600px;
+    background: #000;
+    border-radius: 10px;
+    margin: 30px 0;
+    overflow: hidden;
+    position: relative;
+}
+
+#loading {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    color: white;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.data-table-container {
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    margin-top: 30px;
+}
+
+.table-scroll {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+}
+
+#data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+#data-table th {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px;
+    text-align: left;
+    position: sticky;
+    top: 0;
+}
+
+#data-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+#data-table tr:hover {
+    background-color: #f5f5f5;
+}
+
+/* CSS3D Element Styles */
+.element {
+    width: 180px;
+    height: 220px;
+    background: white;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.element:hover {
+    transform: scale(1.05);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+}
+
+.element-header {
+    text-align: center;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+}
+
+.element-name {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #2d3436;
+}
+
+.element-category {
+    font-size: 0.9rem;
+    color: #666;
+    margin-top: 5px;
+}
+
+.element-details {
+    flex-grow: 1;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    margin: 8px 0;
+    padding: 5px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.detail-label {
+    font-weight: 600;
+    color: #666;
+}
+
+.detail-value {
+    font-weight: bold;
+    color: #2d3436;
+}
+
+.worth-value {
+    font-size: 1.2rem;
+    font-weight: 900;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .controls {
+        grid-template-columns: 1fr;
+    }
+    
+    header {
+        flex-direction: column;
+        gap: 20px;
+        text-align: center;
+    }
+    
+    #container {
+        height: 400px;
+    }
+}
